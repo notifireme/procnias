@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// App sadfasfsa
+// App must be exported
 type App struct {
 	config *viper.Viper
 	router *mux.Router
@@ -18,13 +18,15 @@ type App struct {
 	twilio *twilio.Client
 }
 
-// NewApp dsadsadsa
+// NewApp msut be exported
 func NewApp() (*App, error) {
 	a := new(App)
 	a.config = viper.New()
-	a.config.SetDefault("port", ":8080")
-	a.config.SetDefault("token", "")
-	a.config.SetDefault("sid", "")
+	a.config.SetConfigName("config")
+	a.config.AddConfigPath(".")
+	if err := a.config.ReadInConfig(); err != nil {
+		return nil, err
+	}
 	a.logger = log.New(os.Stdout, "LOG: ", log.Ldate|log.Ltime|log.Lshortfile)
 	a.twilio = twilio.NewClient(a.config.GetString("sid"), a.config.GetString("token"), nil)
 	a.router = mux.NewRouter()
@@ -35,5 +37,5 @@ func NewApp() (*App, error) {
 
 // Run dasdasds
 func (a App) Run() {
-	log.Fatal(http.ListenAndServe(a.config.GetString("port"), a.router))
+	a.logger.Fatal(http.ListenAndServe(a.config.GetString("port"), a.router))
 }

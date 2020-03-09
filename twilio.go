@@ -1,9 +1,28 @@
 package procnias
 
-import "net/url"
+import (
+	"bytes"
+	"net/url"
+	"text/template"
 
-func (a App) sendSMS() {
-	a.twilio.Messages.SendMessage("", "", "Sent via go  ✓", nil)
+	alertmanager "github.com/prometheus/alertmanager/template"
+)
+
+const msg = `Allert: {{.Status}}`
+
+func (a App) sendSMS(alert alertmanager.Alert) error {
+	var b bytes.Buffer
+	tmpl, err := template.New("").Parse(msg)
+	if err != nil {
+		return err
+	}
+	if err := tmpl.Execute(&b, &alert); err != nil {
+		return err
+	}
+	if _, err := a.twilio.Messages.SendMessage("", "", b.String(), nil); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a App) makeCall() {
